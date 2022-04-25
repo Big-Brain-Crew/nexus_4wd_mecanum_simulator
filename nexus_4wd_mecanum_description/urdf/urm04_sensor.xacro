@@ -31,13 +31,12 @@
         </ray>
 
         <plugin name="gazebo_ros_${frame_name}" filename="libgazebo_ros_range.so">
-          <always_on>true</always_on>
-          <update_rate>${update_rate}</update_rate>
+          <updateRate>${update_rate}</updateRate>
           <gaussianNoise>0.005</gaussianNoise>
           <topicName>${ros_topic}</topicName>
-          <frameId>${frame_name}</frameId>
+          <frameName>${frame_name}</frameName>
           <radiation>INFRARED</radiation>
-          <fov>0.2967</fov>
+          <fov>1.57</fov>
         </plugin>
 
       </sensor>
