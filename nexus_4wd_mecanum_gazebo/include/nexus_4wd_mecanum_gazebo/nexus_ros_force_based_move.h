@@ -44,16 +44,19 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 
+#include <nexus_base_ros/EmergencyStopEnable.h>
+#include <nexus_base_ros/ArmingEnable.h>
+
 namespace gazebo {
 
   class GazeboRosForceBasedMove : public ModelPlugin {
 
-    public: 
+    public:
       GazeboRosForceBasedMove();
       ~GazeboRosForceBasedMove();
       void Load(physics::ModelPtr parent, sdf::ElementPtr sdf);
 
-    protected: 
+    protected:
       virtual void UpdateChild();
       virtual void FiniChild();
 
@@ -98,7 +101,15 @@ namespace gazebo {
 
       // command velocity callback
       void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg);
-      common::Time last_cmd_vel_time_;
+    common::Time last_cmd_vel_time_;
+
+      // Emergency Stop Callback
+      bool stopMotors;
+      ros::ServiceServer armingEnableService;
+      ros::ServiceServer emergencyStopService;
+      bool emergencyStopCallback(ros::ServiceEvent<nexus_base_ros::EmergencyStopEnableRequest, nexus_base_ros::EmergencyStopEnableResponse>& event);
+      bool armingEnableCallback(ros::ServiceEvent<nexus_base_ros::ArmingEnableRequest, nexus_base_ros::ArmingEnableResponse>& event);
+
 
       double x_;
       double y_;
@@ -110,7 +121,7 @@ namespace gazebo {
 #else
       math::Pose last_odom_pose_;
 #endif
-      
+
       double torque_yaw_velocity_p_gain_;
       double force_x_velocity_p_gain_;
       double force_y_velocity_p_gain_;

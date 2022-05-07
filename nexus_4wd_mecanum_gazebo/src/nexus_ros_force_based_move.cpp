@@ -25,7 +25,7 @@
 
 #include <nexus_4wd_mecanum_gazebo/nexus_ros_force_based_move.h>
 
-namespace gazebo 
+namespace gazebo
 {
 
   GazeboRosForceBasedMove::GazeboRosForceBasedMove() {}
@@ -34,66 +34,67 @@ namespace gazebo
 
   // Load the controller
   void GazeboRosForceBasedMove::Load(physics::ModelPtr parent,
-      sdf::ElementPtr sdf) 
+      sdf::ElementPtr sdf)
   {
-
+    // Disable motors
+    stopMotors = true;
     parent_ = parent;
 
     /* Parse parameters */
 
     robot_namespace_ = "";
-    if (!sdf->HasElement("robotNamespace")) 
+    if (!sdf->HasElement("robotNamespace"))
     {
       ROS_INFO("ForceBasedPlugin missing <robotNamespace>, "
           "defaults to \"%s\"", robot_namespace_.c_str());
     }
-    else 
+    else
     {
-      robot_namespace_ = 
+      robot_namespace_ =
         sdf->GetElement("robotNamespace")->Get<std::string>();
     }
 
     command_topic_ = "cmd_vel";
-    if (!sdf->HasElement("commandTopic")) 
+    if (!sdf->HasElement("commandTopic"))
     {
       ROS_WARN("ForceBasedPlugin (ns = %s) missing <commandTopic>, "
-          "defaults to \"%s\"", 
+          "defaults to \"%s\"",
           robot_namespace_.c_str(), command_topic_.c_str());
-    } 
-    else 
+    }
+    else
     {
       command_topic_ = sdf->GetElement("commandTopic")->Get<std::string>();
     }
 
     odometry_topic_ = "odom";
-    if (!sdf->HasElement("odometryTopic")) 
+    if (!sdf->HasElement("odometryTopic"))
     {
       ROS_WARN("ForceBasedPlugin (ns = %s) missing <odometryTopic>, "
-          "defaults to \"%s\"", 
+          "defaults to \"%s\"",
           robot_namespace_.c_str(), odometry_topic_.c_str());
-    } 
-    else 
+    }
+    else
     {
       odometry_topic_ = sdf->GetElement("odometryTopic")->Get<std::string>();
     }
 
     odometry_frame_ = "odom";
-    if (!sdf->HasElement("odometryFrame")) 
+    if (!sdf->HasElement("odometryFrame"))
     {
       ROS_WARN("ForceBasedPlugin (ns = %s) missing <odometryFrame>, "
           "defaults to \"%s\"",
           robot_namespace_.c_str(), odometry_frame_.c_str());
     }
-    else 
+    else
     {
       odometry_frame_ = sdf->GetElement("odometryFrame")->Get<std::string>();
     }
-    
-    
+
+
     torque_yaw_velocity_p_gain_ = 1.0;
     force_x_velocity_p_gain_ = 15.0;
     force_y_velocity_p_gain_ = 15.0;
-    
+
     if (sdf->HasElement("yaw_velocity_p_gain"))
       (sdf->GetElement("yaw_velocity_p_gain")->GetValue()->Get(torque_yaw_velocity_p_gain_));
 
@@ -102,19 +103,19 @@ namespace gazebo
 
     if (sdf->HasElement("y_velocity_p_gain"))
       (sdf->GetElement("y_velocity_p_gain")->GetValue()->Get(force_y_velocity_p_gain_));
-      
+
     ROS_INFO_STREAM("ForceBasedMove using gains: yaw: " << torque_yaw_velocity_p_gain_ <<
                                                  " x: " << force_x_velocity_p_gain_ <<
                                                  " y: " << force_y_velocity_p_gain_ << "\n");
 
     robot_base_frame_ = "base_footprint";
-    if (!sdf->HasElement("robotBaseFrame")) 
+    if (!sdf->HasElement("robotBaseFrame"))
     {
       ROS_WARN("ForceBasedPlugin (ns = %s) missing <robotBaseFrame>, "
           "defaults to \"%s\"",
           robot_namespace_.c_str(), robot_base_frame_.c_str());
-    } 
-    else 
+    }
+    else
     {
       robot_base_frame_ = sdf->GetElement("robotBaseFrame")->Get<std::string>();
     }
@@ -124,13 +125,13 @@ namespace gazebo
     this->link_ = parent->GetLink(robot_base_frame_);
 
     odometry_rate_ = 20.0;
-    if (!sdf->HasElement("odometryRate")) 
+    if (!sdf->HasElement("odometryRate"))
     {
       ROS_WARN("ForceBasedPlugin (ns = %s) missing <odometryRate>, "
           "defaults to %f",
           robot_namespace_.c_str(), odometry_rate_);
-    } 
-    else 
+    }
+    else
     {
       odometry_rate_ = sdf->GetElement("odometryRate")->Get<double>();
     }
@@ -165,7 +166,7 @@ namespace gazebo
     max_yaw_velocity = 0.5;
     if (sdf->HasElement("max_yaw_velocity"))
       (sdf->GetElement("max_yaw_velocity")->GetValue()->Get(max_yaw_velocity));
- 
+
 #if (GAZEBO_MAJOR_VERSION >= 8)
     last_odom_publish_time_ = parent_->GetWorld()->SimTime();
     last_odom_pose_ = parent_->WorldPose();
@@ -181,7 +182,7 @@ namespace gazebo
     odom_transform_.setIdentity();
 
     // Ensure that ROS has been initialized and subscribe to cmd_vel
-    if (!ros::isInitialized()) 
+    if (!ros::isInitialized())
     {
       ROS_FATAL_STREAM("ForceBasedPlugin (ns = " << robot_namespace_
         << "). A ROS node for Gazebo has not been initialized, "
@@ -191,7 +192,7 @@ namespace gazebo
     }
     rosnode_.reset(new ros::NodeHandle(robot_namespace_));
 
-    ROS_DEBUG("OCPlugin (%s) has started!", 
+    ROS_DEBUG("OCPlugin (%s) has started!",
         robot_namespace_.c_str());
 
     tf_prefix_ = tf::getPrefixParam(*rosnode_);
@@ -209,13 +210,17 @@ namespace gazebo
     odometry_pub_ = rosnode_->advertise<nav_msgs::Odometry>(odometry_topic_, 1);
 
     // start custom queue for diff drive
-    callback_queue_thread_ = 
+    callback_queue_thread_ =
       boost::thread(boost::bind(&GazeboRosForceBasedMove::QueueThread, this));
 
     // listen to the update event (broadcast every simulation iteration)
-    update_connection_ = 
+    update_connection_ =
       event::Events::ConnectWorldUpdateBegin(
           boost::bind(&GazeboRosForceBasedMove::UpdateChild, this));
+
+    // Add callbacks for emergency stop and enable services
+    armingEnableService = rosnode_->advertiseService("/arming_enable", &GazeboRosForceBasedMove::armingEnableCallback, this);
+    emergencyStopService = rosnode_->advertiseService("/emergency_stop_enable", &GazeboRosForceBasedMove::emergencyStopCallback, this);
 
   }
 
@@ -232,6 +237,15 @@ namespace gazebo
       y_ = 0.0;
       rot_ = 0.0;
     }
+
+    // Set command velocity to zero if stopMotors is true
+    if (stopMotors) {
+      x_ = 0.0;
+      y_ = 0.0;
+      rot_ = 0.0;
+    }
+
+
 
     ignition::math::Vector3d angular_vel = parent_->WorldAngularVel();
 
@@ -283,7 +297,7 @@ namespace gazebo
 #else
       common::Time current_time = parent_->GetWorld()->GetSimTime();
 #endif
-      double seconds_since_last_update = 
+      double seconds_since_last_update =
         (current_time - last_odom_publish_time_).Double();
       if (seconds_since_last_update > (1.0 / odometry_rate_)) {
         publishOdometry(seconds_since_last_update);
@@ -302,7 +316,7 @@ namespace gazebo
   }
 
   void GazeboRosForceBasedMove::cmdVelCallback(
-      const geometry_msgs::Twist::ConstPtr& cmd_msg) 
+      const geometry_msgs::Twist::ConstPtr& cmd_msg)
   {
     boost::mutex::scoped_lock scoped_lock(lock);
     x_ = cmd_msg->linear.x;
@@ -319,7 +333,7 @@ namespace gazebo
   void GazeboRosForceBasedMove::QueueThread()
   {
     static const double timeout = 0.01;
-    while (alive_ && rosnode_->ok()) 
+    while (alive_ && rosnode_->ok())
     {
       queue_.callAvailable(ros::WallDuration(timeout));
     }
@@ -330,7 +344,7 @@ namespace gazebo
 
     ros::Time current_time = ros::Time::now();
     std::string odom_frame = tf::resolve(tf_prefix_, odometry_frame_);
-    std::string base_footprint_frame = 
+    std::string base_footprint_frame =
       tf::resolve(tf_prefix_, robot_base_frame_);
 
 #if (GAZEBO_MAJOR_VERSION >= 8)
@@ -364,13 +378,13 @@ namespace gazebo
           tf::StampedTransform(odom_transform_, current_time, odom_frame,
               base_footprint_frame));
     }
-    
+
     odom_.pose.covariance[0] = 0.001;
     odom_.pose.covariance[7] = 0.001;
     odom_.pose.covariance[14] = 1000000000000.0;
     odom_.pose.covariance[21] = 1000000000000.0;
     odom_.pose.covariance[28] = 1000000000000.0;
-    
+
 #if (GAZEBO_MAJOR_VERSION >= 8)
     if (std::abs(angular_vel.Z()) < 0.0001) {
 #else
@@ -439,6 +453,36 @@ namespace gazebo
 
     return tmp;
   }
+
+  // Emergency Stop Callback
+  bool GazeboRosForceBasedMove::emergencyStopCallback(ros::ServiceEvent<nexus_base_ros::EmergencyStopEnableRequest, nexus_base_ros::EmergencyStopEnableResponse>& event) {
+    const auto& req = event.getRequest();
+    auto& res = event.getResponse();
+
+    // handle request
+    if(req.enable) {
+      stopMotors = true;
+    }
+    // generate response
+    res.success = true;
+
+    return true;
+  }
+
+  // Arming Enable CallBack
+bool GazeboRosForceBasedMove::armingEnableCallback(ros::ServiceEvent<nexus_base_ros::ArmingEnableRequest, nexus_base_ros::ArmingEnableResponse>& event) {
+  const auto& req = event.getRequest();
+  auto& res = event.getResponse();
+
+  // handle request
+  if(req.enable){
+    stopMotors = false;
+  }
+  // generate response
+  res.success = true;
+
+  return true;
+}
 
   GZ_REGISTER_MODEL_PLUGIN(GazeboRosForceBasedMove)
 }

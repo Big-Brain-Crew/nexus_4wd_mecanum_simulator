@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf
   message_generation
+  nexus_base_ros
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
@@ -28,10 +29,11 @@ find_package(Boost REQUIRED COMPONENTS thread)
 include_directories(${Boost_INCLUDE_DIRS})
 
 
+
 catkin_package(
     CATKIN_DEPENDS roscpp std_msgs geometry_msgs nav_msgs tf message_runtime
     INCLUDE_DIRS include
-    LIBRARIES
+    LIBRARIES nexus_base_ros
 )
 
 ###########
@@ -39,6 +41,8 @@ catkin_package(
 ###########
 add_library(nexus_ros_force_based_move src/nexus_ros_force_based_move.cpp)
 target_link_libraries(nexus_ros_force_based_move ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+
+add_dependencies(nexus_ros_force_based_move ${catkin_EXPORTED_TARGETS})
 
 #############
 ## Install ##
