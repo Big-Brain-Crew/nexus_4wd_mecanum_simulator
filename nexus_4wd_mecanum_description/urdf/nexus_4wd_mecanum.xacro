@@ -293,7 +293,7 @@
   </link>
 
   <joint name="left_sensor_joint" type="fixed">
-    <origin xyz="0 0.108 0.010" rpy="0 0 ${PI/2}" />
+    <origin xyz="0 0.108 0.010" rpy="0 -0.1 ${PI/2}" />
     <parent link="base_link"/>
     <child link="left_range" />
   </joint>
@@ -309,7 +309,7 @@
   </link>
 
   <joint name="front_sensor_joint" type="fixed">
-    <origin xyz="0.205 0 0.010" rpy="0 0 0" />
+    <origin xyz="0.205 0 0.010" rpy="0 -0.1 0" />
     <parent link="base_link"/>
     <child link="front_range" />
   </joint>
@@ -325,7 +325,7 @@
   </link>
 
   <joint name="right_sensor_joint" type="fixed">
-    <origin xyz="0 -0.108 0.010" rpy="0 0 ${-PI/2}" />
+    <origin xyz="0 -0.108 0.010" rpy="0 -0.1 ${-PI/2}" />
     <parent link="base_link"/>
     <child link="right_range" />
   </joint>
@@ -341,7 +341,7 @@
   </link>
 
   <joint name="rear_sensor_joint" type="fixed">
-    <origin xyz="-0.201 0 0.010" rpy="0 0 ${PI}" />
+    <origin xyz="-0.201 0 0.010" rpy="0 -0.1 ${PI}" />
     <parent link="base_link"/>
     <child link="rear_range" />
   </joint>
@@ -362,12 +362,12 @@
   <!-- Include URM04 ultrasonic range finders -->
   <xacro:include filename="$(find nexus_4wd_mecanum_description)/urdf/urm04_sensor.xacro"/>
   <!-- front sensor -->
-  <xacro:urm04_sensor frame_name="front_range" ros_topic="front_range" update_rate="10" min_range="0.01" max_range="2.5" horizontal_field_of_view="1.57" vertical_field_of_view="0.1" ray_count="2" />
+  <xacro:urm04_sensor frame_name="front_range" ros_topic="front_range" update_rate="10" min_range="0.01" max_range="2" horizontal_field_of_view="0.261799" vertical_field_of_view="0.2" ray_count="2" />
   <!-- left sensor -->
-  <xacro:urm04_sensor frame_name="left_range" ros_topic="left_range" update_rate="10" min_range="0.01" max_range="2.5" horizontal_field_of_view="1.57" vertical_field_of_view="0.1" ray_count="2" />
+  <xacro:urm04_sensor frame_name="left_range" ros_topic="left_range" update_rate="10" min_range="0.01" max_range="2" horizontal_field_of_view="0.261799" vertical_field_of_view="0.2" ray_count="2" />
   <!-- right sensor -->
-  <xacro:urm04_sensor frame_name="right_range" ros_topic="right_range" update_rate="10" min_range="0.01" max_range="2.5" horizontal_field_of_view="1.57" vertical_field_of_view="0.1" ray_count="2" />
+  <xacro:urm04_sensor frame_name="right_range" ros_topic="right_range" update_rate="10" min_range="0.01" max_range="2" horizontal_field_of_view="0.261799" vertical_field_of_view="0.2" ray_count="2" />
   <!-- rear sensor -->
-  <xacro:urm04_sensor frame_name="rear_range" ros_topic="rear_range" update_rate="10" min_range="0.01" max_range="2.5" horizontal_field_of_view="1.57" vertical_field_of_view="0.1" ray_count="2" />
+  <xacro:urm04_sensor frame_name="rear_range" ros_topic="rear_range" update_rate="10" min_range="0.01" max_range="2" horizontal_field_of_view="0.261799" vertical_field_of_view="0.2" ray_count="2" />
 
 </robot>

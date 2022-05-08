@@ -36,7 +36,7 @@
           <topicName>${ros_topic}</topicName>
           <frameName>${frame_name}</frameName>
           <radiation>INFRARED</radiation>
-          <fov>1.57</fov>
+          <fov>${horizontal_field_of_view/2}</fov>
         </plugin>
 
       </sensor>
