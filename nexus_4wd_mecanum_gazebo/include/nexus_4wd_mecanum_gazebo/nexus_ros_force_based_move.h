@@ -44,8 +44,7 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 
-#include <nexus_base_ros/EmergencyStopEnable.h>
-#include <nexus_base_ros/ArmingEnable.h>
+#include <robot_drivers_common/DriveEnable.h>
 
 namespace gazebo {
 
@@ -105,10 +104,8 @@ namespace gazebo {
 
       // Emergency Stop Callback
       bool stopMotors;
-      ros::ServiceServer armingEnableService;
-      ros::ServiceServer emergencyStopService;
-      bool emergencyStopCallback(ros::ServiceEvent<nexus_base_ros::EmergencyStopEnableRequest, nexus_base_ros::EmergencyStopEnableResponse>& event);
-      bool armingEnableCallback(ros::ServiceEvent<nexus_base_ros::ArmingEnableRequest, nexus_base_ros::ArmingEnableResponse>& event);
+      ros::ServiceServer driveEnableService;
+      bool driveEnableCallback(ros::ServiceEvent<robot_drivers_common::DriveEnableRequest, robot_drivers_common::DriveEnableResponse>& event);
 
 
       double x_;

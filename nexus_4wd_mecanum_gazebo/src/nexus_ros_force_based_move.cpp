@@ -219,9 +219,7 @@ namespace gazebo
           boost::bind(&GazeboRosForceBasedMove::UpdateChild, this));
 
     // Add callbacks for emergency stop and enable services
-    armingEnableService = rosnode_->advertiseService("/arming_enable", &GazeboRosForceBasedMove::armingEnableCallback, this);
-    emergencyStopService = rosnode_->advertiseService("/emergency_stop_enable", &GazeboRosForceBasedMove::emergencyStopCallback, this);
-
+    driveEnableService = rosnode_->advertiseService("/drive_enable", &GazeboRosForceBasedMove::driveEnableCallback, this);
   }
 
   // Update the controller
@@ -454,23 +452,9 @@ namespace gazebo
     return tmp;
   }
 
-  // Emergency Stop Callback
-  bool GazeboRosForceBasedMove::emergencyStopCallback(ros::ServiceEvent<nexus_base_ros::EmergencyStopEnableRequest, nexus_base_ros::EmergencyStopEnableResponse>& event) {
-    const auto& req = event.getRequest();
-    auto& res = event.getResponse();
 
-    // handle request
-    if(req.enable) {
-      stopMotors = true;
-    }
-    // generate response
-    res.success = true;
-
-    return true;
-  }
-
-  // Arming Enable CallBack
-bool GazeboRosForceBasedMove::armingEnableCallback(ros::ServiceEvent<nexus_base_ros::ArmingEnableRequest, nexus_base_ros::ArmingEnableResponse>& event) {
+// Drive Enable CallBack
+bool GazeboRosForceBasedMove::driveEnableCallback(ros::ServiceEvent<robot_drivers_common::DriveEnableRequest, robot_drivers_common::DriveEnableResponse>& event) {
   const auto& req = event.getRequest();
   auto& res = event.getResponse();
 
@@ -478,6 +462,11 @@ bool GazeboRosForceBasedMove::armingEnableCallback(ros::ServiceEvent<nexus_base_
   if(req.enable){
     stopMotors = false;
   }
+  else
+  {
+    stopMotors = true;
+  }
+
   // generate response
   res.success = true;
 

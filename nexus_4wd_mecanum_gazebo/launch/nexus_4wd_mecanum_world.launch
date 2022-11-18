@@ -15,8 +15,8 @@
   </include>
 
   <!-- Create a map server to load the willow garage map -->
-  <arg name="map_file" default="$(find nexus_4wd_mecanum_gazebo)/maps/willow-2010-02-18-0.10.yaml"/>
-  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+  <!-- <arg name="map_file" default="$(find nexus_4wd_mecanum_gazebo)/maps/willow-2010-02-18-0.10.yaml"/>
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" /> -->
 
 <!-- Load robot description -->
 <include file="$(find nexus_4wd_mecanum_description)/launch/nexus_4wd_mecanum_description.launch" />

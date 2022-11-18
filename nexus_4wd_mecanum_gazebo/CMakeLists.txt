@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf
   message_generation
-  nexus_base_ros
+  robot_drivers_common
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
@@ -31,7 +31,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 
 catkin_package(
-    CATKIN_DEPENDS roscpp std_msgs geometry_msgs nav_msgs tf message_runtime
+    CATKIN_DEPENDS roscpp std_msgs geometry_msgs nav_msgs tf message_runtime robot_drivers_common
     INCLUDE_DIRS include
     LIBRARIES nexus_base_ros
 )
