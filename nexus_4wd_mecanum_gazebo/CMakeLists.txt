@@ -29,12 +29,28 @@ find_package(Boost REQUIRED COMPONENTS thread)
 include_directories(${Boost_INCLUDE_DIRS})
 
 
+## Generate services in the 'srv' folder
+add_service_files(
+  FILES
+  SetStatus.srv
+)
+
+# Generate added messages and services with any dependencies listed here
+ generate_messages(
+   DEPENDENCIES
+   std_msgs  # Or other packages containing msgs
+ )
+
+
 
 catkin_package(
     CATKIN_DEPENDS roscpp std_msgs geometry_msgs nav_msgs tf message_runtime robot_drivers_common
     INCLUDE_DIRS include
     LIBRARIES nexus_base_ros
 )
+
+
+
 
 ###########
 ## Build ##

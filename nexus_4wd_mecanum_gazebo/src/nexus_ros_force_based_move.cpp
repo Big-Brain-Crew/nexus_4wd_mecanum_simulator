@@ -37,7 +37,7 @@ namespace gazebo
       sdf::ElementPtr sdf)
   {
     // Disable motors
-    stopMotors = true;
+    stopMotors = false;
     parent_ = parent;
 
     /* Parse parameters */
@@ -219,7 +219,13 @@ namespace gazebo
           boost::bind(&GazeboRosForceBasedMove::UpdateChild, this));
 
     // Add callbacks for emergency stop and enable services
-    driveEnableService = rosnode_->advertiseService("/drive_enable", &GazeboRosForceBasedMove::driveEnableCallback, this);
+    driveEnableService = rosnode_->advertiseService("drive_enable", &GazeboRosForceBasedMove::driveEnableCallback, this);
+
+    setStatusService = rosnode_->advertiseService("set_status", &GazeboRosForceBasedMove::setStatusCallback, this);
+
+
+    // Diagnostics Pub
+    diagnostics_pub_ = rosnode_->advertise<diagnostic_msgs::DiagnosticArray>("diagnostics", 1);
   }
 
   // Update the controller
@@ -300,6 +306,33 @@ namespace gazebo
       if (seconds_since_last_update > (1.0 / odometry_rate_)) {
         publishOdometry(seconds_since_last_update);
         last_odom_publish_time_ = current_time;
+      }
+
+      // Publish diagnostics every 1 second
+      seconds_since_last_update =
+        (current_time - last_diagnostics_publish_time_).Double();
+      if (seconds_since_last_update > (1.0)) {
+        last_diagnostics_publish_time_ = current_time;
+
+        diagnostic_msgs::DiagnosticArray diagnostics;
+        diagnostics.header.stamp = ros::Time::now();
+        diagnostics.status.resize(1);
+        // Name is namespace + sim_drive_base
+
+        // warn
+        diagnostics.status[0].name = "sim_drive_base";
+        // For non-simulated robots, this can be individual hardware components
+        diagnostics.status[0].hardware_id = diagnostics.status[0].name;
+
+        // Set the message
+        diagnostics.status[0].message = status_message;
+        // Set key, value robot_status: status
+        diagnostics.status[0].values.resize(1);
+        diagnostics.status[0].values[0].key = "robot_status";
+        diagnostics.status[0].values[0].value = status;
+
+        // Publish the diagnostics
+        diagnostics_pub_.publish(diagnostics);
       }
     }
   }
@@ -472,6 +505,18 @@ bool GazeboRosForceBasedMove::driveEnableCallback(ros::ServiceEvent<robot_driver
 
   return true;
 }
+
+bool GazeboRosForceBasedMove::setStatusCallback(ros::ServiceEvent<nexus_4wd_mecanum_gazebo::SetStatusRequest, nexus_4wd_mecanum_gazebo::SetStatusResponse>& event)
+{
+  const auto& req = event.getRequest();
+  auto& res = event.getResponse();
+
+  // Convert req.status (uint8) to string
+  status = std::to_string(req.status);
+
+  return true;
+}
+
 
   GZ_REGISTER_MODEL_PLUGIN(GazeboRosForceBasedMove)
 }

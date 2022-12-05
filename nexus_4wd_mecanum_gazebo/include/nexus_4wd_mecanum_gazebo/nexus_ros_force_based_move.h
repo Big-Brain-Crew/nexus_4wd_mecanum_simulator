@@ -45,6 +45,9 @@
 #include <tf/transform_listener.h>
 
 #include <robot_drivers_common/DriveEnable.h>
+#include <nexus_4wd_mecanum_gazebo/SetStatus.h>
+
+#include <diagnostic_msgs/DiagnosticArray.h>
 
 namespace gazebo {
 
@@ -127,8 +130,17 @@ namespace gazebo {
       double max_y_velocity;
       double max_yaw_velocity;
 
-  };
 
+      // Robot Diagnostics
+      ros::Publisher diagnostics_pub_;
+      std::string status = "0";
+      std::string status_message = "This is a test status message";
+      // Define service to set status
+      ros::ServiceServer setStatusService;
+      bool setStatusCallback(ros::ServiceEvent<nexus_4wd_mecanum_gazebo::SetStatusRequest, nexus_4wd_mecanum_gazebo::SetStatusResponse>& event);
+
+      common::Time last_diagnostics_publish_time_;
+  };
 }
 
 #endif /* end of include guard: GAZEBO_ROS_PLANAR_MOVE_HH */
